@@ -1,26 +1,37 @@
 use std::fs::File;
-use std::io::prelude::*;
+use std::io::{self, BufRead, Error};
+
 use std::path::Path;
 
 
-
-fn main() {
+fn main() -> Result<(), Error> {
     let input_path = Path::new("input.txt");
-    let mut file = File::open(&input_path).unwrap();
-    let mut file_contents = String::new();
-    file.read_to_string(&mut file_contents).unwrap();
-    let lines: Vec<&str> = file_contents.split_ascii_whitespace().collect();
-    let mut total_increases: u32 = 0;
-    for i in 3..lines.len()  {
-        let a: u32 = lines[i - 3].parse().unwrap();
-        let b: u32 = lines[i - 2].parse().unwrap();
-        let c: u32 = lines[i - 1].parse().unwrap();
-        let d: u32 = lines[i].parse().unwrap();
-        let prev = a + b + c;
-        let curr = b + c + d;
-        if curr > prev {
-            total_increases += 1;
+    let file = File::open(&input_path).unwrap();
+    let file_reader = io::BufReader::new(file);
+
+    let mut horizontal_position: u32 = 0;
+    let mut depth: u32 = 0;
+    let mut aim: u32 = 0;
+
+    for line in file_reader.lines() {
+        if let Ok(direction_scalar) = line {
+            let split: Vec<&str> = direction_scalar.split(' ').collect();
+            match split[0] {
+                "forward" => {
+                    let x = split[1].parse::<u32>().unwrap();
+                    horizontal_position += x;
+                    depth += aim * x;
+                },
+                "down" => {
+                    aim += split[1].parse::<u32>().unwrap();
+                },
+                "up" => {
+                    aim -= split[1].parse::<u32>().unwrap();
+                },
+                _ => panic!("Unknown direction")
+            }
         }
     }
-    println!("{}", total_increases);
+    println!("{}", horizontal_position * depth);
+    Ok(())
 }
